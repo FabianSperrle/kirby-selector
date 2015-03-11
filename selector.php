@@ -193,7 +193,7 @@ class SelectorField extends BaseField {
     public function files()
     {
         return $this->page()->files()->filter(function($file) {
-            return $this->includeAllFiles() or in_array($file->type(), $this->types);
+            return $this->includeAllFiles() or (in_array($file->type(), $this->types) and !str::contains($file->filename(), 'resize'));
         });
     }
 
