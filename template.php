@@ -1,7 +1,6 @@
-
 <input class="[ js-selector-storage ]" type="hidden" name="<?= $field->name() ?>" id="<?= $field->name() ?>" value="<?= $field->value() ?>" />
 
-<div class="input input-with-items">
+<div class="input input-with-items" style="height: calc(48px * <?php echo $field->max ?>);overflow: scroll">
     <?php if($field->files()->count() > 0): ?>
         <?php foreach($field->files() as $file): ?>
             <div id="<?= $field->itemId($file) ?>" class="item item-with-image [ selector-item js-selector-item ]" data-file="<?= $file->filename() ?>" <?= r($field->isInValue($file), 'data-checked="true"') ?> >

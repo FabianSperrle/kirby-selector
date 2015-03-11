@@ -33,6 +33,8 @@ class SelectorField extends BaseField {
      */
     public $types;
 
+	public $max;
+
     /**
      * Option default values
      *
@@ -42,6 +44,7 @@ class SelectorField extends BaseField {
     protected $defaultValues = array(
         'mode'    => 'single',
         'options' => 'all',
+		'max' => 5,
     );
 
     /**
@@ -94,6 +97,10 @@ class SelectorField extends BaseField {
                 if(!is_array($value) or empty($value))
                     $this->types = array('all');
                 break;
+			case 'max':
+				if ($value < $this->validValues['max']['min'] || $value > $this->validValues['max']['max'])
+					$this->max = $this->defaultValues['max'];
+				break;
         }
     }
 
