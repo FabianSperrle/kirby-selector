@@ -62,14 +62,18 @@ Selector = (function($, $field) {
         // Find parent item element
         var $target = $(this).closest('.js-selector-item');
 
-        /*
-            SINGLE MODE
-            Unselect all items and reselect only the curent one.
-         */
-        if(self.mode == 'single') {
-            self.setUnselectedStates();
-            self.setSelectedState($target);
-        }
+		/*
+			SINGLE MODE
+			Unselect all items and reselect only the curent one.
+		 */
+		if(self.mode == 'single') {
+			if($target.data('checked') == 'true') {
+				self.setUnselectedStates();
+			} else {
+				self.setUnselectedStates();
+				self.setSelectedState($target);
+			}
+		}
 
         /*
             MULTIPLE MODE
