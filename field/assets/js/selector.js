@@ -3,10 +3,12 @@ Selector = (function($, $field) {
 
     var self = this;
 
-    this.$field   = $field;
-    this.$storage = $field.find('.js-selector-storage');
-    this.$items   = $field.find('.js-selector-item');
-    this.mode     = $field.data('mode');
+    this.$field     = $field;
+    this.$storage   = $field.find('.js-selector-storage');
+    this.$items     = $field.find('.js-selector-item');
+    this.mode       = $field.data('mode');
+    this.autoselect = $field.data('autoselect');
+    this.size       = $field.data('size');
 
     /**
      * Initialize fileselect field
@@ -14,6 +16,16 @@ Selector = (function($, $field) {
      * @since 1.0.0
      */
     this.init = function() {
+
+        /**
+         * Initialize field size.
+         *
+         * @since 1.4.0
+         */
+        if(self.size != 'auto') {
+            self.initSize();
+        }
+
 
         /**
          * Initialize preselected items
@@ -28,6 +40,29 @@ Selector = (function($, $field) {
          * @since 1.0.0
          */
         self.$field.find('.js-selector-checkbox').click(self.handleClickEvent);
+
+        /**
+         * Maybe autoselect an item
+         *
+         * @since 1.2.0
+         */
+        if(self.autoselect != 'none') {
+            self.doAutoSelect();
+        }
+    };
+
+    this.initSize = function() {
+        // Calculate box height:
+        // (<visible items> * <item height>) + <visible item borders> + box borders
+        var height = self.size * self.$items.first().height() + (self.size - 1) + 4;
+
+        // Apply height and overflow styles to box
+        if (self.$items.length > 0) {
+            self.$field.find('.input-with-items').css({
+                maxHeight: height,
+                overflowY: 'scroll'
+            });
+        }
     };
 
     /**
@@ -41,13 +76,56 @@ Selector = (function($, $field) {
         // Apply the selected state to all preselected items
         self.$items.each(function() {
             $item = $(this);
-            if($item.data('checked') == true)
+            if($item.data('checked') === true)
                 self.setSelectedState($item);
         });
 
         // Initialize storage element value
         self.updateStorage();
-    }
+    };
+
+    /**
+     * Maybe auto select an item
+     *
+     * @since 1.2.0
+     */
+    this.doAutoSelect = function() {
+        var selected = false;
+
+        // Abort if any file is selected
+        self.$items.each(function() {
+            if(self.hasSelectedState($(this))) {
+                selected = true;
+            }
+        });
+        if(selected) {
+            return;
+        }
+
+        // Select item according to setting and update storage
+        switch(self.autoselect) {
+
+            case 'first':
+                self.setSelectedState(self.$items.first());
+                break;
+
+            case 'last':
+                self.setSelectedState(self.$items.last());
+                break;
+
+            case 'all':
+                if(self.mode == 'multiple') {
+                    self.$items.each(function() {
+                        self.setSelectedState($(this));
+                    });
+                } else {
+                    self.setSelectedState(self.$items.first());
+                }
+                break;
+
+        }
+        self.updateStorage();
+    };
 
     /**
      * Handle the click event for the items checkboxes
@@ -62,18 +140,18 @@ Selector = (function($, $field) {
         // Find parent item element
         var $target = $(this).closest('.js-selector-item');
 
-		/*
-			SINGLE MODE
-			Unselect all items and reselect only the curent one.
-		 */
-		if(self.mode == 'single') {
-			if($target.data('checked') == 'true') {
-				self.setUnselectedStates();
-			} else {
-				self.setUnselectedStates();
-				self.setSelectedState($target);
-			}
-		}
+        /*
+            SINGLE MODE
+            Unselect all items and reselect only the curent one.
+         */
+        if(self.mode == 'single') {
+            if($target.data('checked') == 'true') {
+                self.setUnselectedStates();
+            } else {
+                self.setUnselectedStates();
+                self.setSelectedState($target);
+            }
+        }
 
         /*
             MULTIPLE MODE
@@ -85,7 +163,7 @@ Selector = (function($, $field) {
 
         // Update storage element
         self.updateStorage();
-    }
+    };
 
     /**
      * Set all items into the unselected state
@@ -108,7 +186,7 @@ Selector = (function($, $field) {
     this.setUnselectedState = function($target) {
         $target.data('checked', 'false')
                .removeClass('selector-item-selected')
-               .find('.icon')
+               .find('.fa-check-circle')
                    .removeClass('fa-check-circle')
                    .addClass('fa-circle-o');
     };
@@ -123,7 +201,7 @@ Selector = (function($, $field) {
     this.setSelectedState = function($target) {
         $target.data('checked', 'true')
                .addClass('selector-item-selected')
-               .find('.icon')
+               .find('.fa-circle-o')
                    .removeClass('fa-circle-o')
                    .addClass('fa-check-circle');
     };
@@ -136,12 +214,23 @@ Selector = (function($, $field) {
      * @param $target
      */
     this.toggleSelectedState = function($target) {
-        if($target.data('checked') == 'true') {
+        if(self.hasSelectedState($target)) {
             self.setUnselectedState($target);
         } else {
             self.setSelectedState($target);
         }
-    }
+    };
+
+    /**
+     * Check if an item is selected
+     *
+     * @since 1.2.0
+     *
+     * @param $target
+     */
+    this.hasSelectedState = function($target) {
+        return ($target.data('checked') == 'true');
+    };
 
     /**
      * Update storage input element with current state
@@ -165,9 +254,9 @@ Selector = (function($, $field) {
 
         });
 
-        // Set JSON representation of the result as storage value
-        self.$storage.val(JSON.stringify(files));
-    }
+        // Set string representation of the result as storage value
+        self.$storage.val(files.join());
+    };
 
     return this.init();
 
